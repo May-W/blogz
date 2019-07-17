@@ -2,7 +2,7 @@
 
 {% block content %}
     <ul>
-        <li><p>{{blogs.title}}</p><p>{{blogs.body}}</p>
+        <li><p>{{blogs.title}}</p><p>{{blogs.body}}</p><p>Written by <a href="blog?user={{blog.owner.id}}">{{blog.owner.email}}</a></p>
         </li>
     </ul>
 {% endblock %}

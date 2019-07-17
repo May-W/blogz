@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Build A Blog!</h1>
+    <h1>Blogz!</h1>
 
     {% if blogs|length == 0 %}
     <p>No entries yet</p>
     {% else %}
-
+    
         <ul>
             {% for blog in blogs %}
-            <li><p><a href="/blog?id={{blog.id}}">{{blog.title}}</a></p><p>{{blog.body}}</p>
+            <li><p><a href="/blog?id={{blog.id}}">{{blog.title}}</a></p><p>{{blog.body}}</p><p><p>Written by <a href="blog?user={{blog.owner.id}}">{{blog.owner.email}}</a>.</p></p>
             </li>
             {% endfor %}
         </ul>
