@@ -32,12 +32,43 @@ class User(db.Model):
         self.email = email
         self.password = password
 
+def is_blank(string):
+    len(string) == 0
+
+def length_valid(string):
+    if len(string) > 20 or len(string) < 3:
+        return False
+    else:
+        return True
+
+def contains_spaces(string):
+    spaces = 0
+    for c in string:
+        if c == ' ':
+            spaces = spaces + 1
+    return spaces > 0
+
+def one_at(string):
+    at = 0
+    for c in string:
+        if c == '@':
+            at = at + 1
+    return at == 1
+
+def one_dot(string):
+    dot = 0
+    for c in string:
+        if c == '.':
+            dot = dot + 1
+    return dot == 1
+
+
+
 @app.before_request
 def require_login():
     allowed_routes = ['login', 'signup', 'index', 'blog']
     if request.endpoint not in allowed_routes and 'email' not in session:
         redirect('/login')
-    #Do we need /blog to be in the allowed fields if they are not logged in?
 
 @app.route('/')
 def index():
@@ -46,24 +77,52 @@ def index():
 
 @app.route('/signup', methods=['POST', 'GET'])
 def signup():
+
+    password_error = ''
+    verify_error = ''
+    email_error = ''
+
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
         verify = request.form['verify']
 
-        # TODO - Validate user data
-        #After validation, should redirect to newpost page
+        if is_blank(password):
+            password_error = "Password must not be blank"
+        elif length_valid(password) == False or contains_spaces(password) == True:
+            password_error = "Password must be between 3 and 20 characters and must not contain spaces"
 
-        existing_user = User.query.filter_by(email=email).first()
-        if not existing_user:
-            new_user = User(email, password)
-            db.session.add(new_user)
-            db.session.commit()
-            session['email'] = email
-            return redirect('/')
-        else:
-            return "<h1>Duplicate user</h1>"
-            #need to turn this into a flash message with redirect back to /signup
+        if is_blank(verify):
+            verify_error = "Password must not be blank"
+        elif length_valid(verify) == False or contains_spaces(verify) == True:
+            verify_error = "Password must be between 3 and 20 characters and must not contain spaces"
+
+        if password != verify:
+            password_error: "Passwords must Match"
+            verify_error = "Passwords must match"
+
+        if len(email) != 0:
+            if length_valid(email) == False or contains_spaces(email) == True or one_at(email) == False or one_dot(email) == False:
+                email_error = "Email must be between 3 and 20 characters, must not contain spaces, and may only contain one at and one dot"
+
+        if not password_error and not verify_error and not email_error:
+            existing_user = User.query.filter_by(email=email).first()
+            if not existing_user:
+                new_user = User(email, password)
+                db.session.add(new_user)
+                db.session.commit()
+                session['email'] = email
+                return redirect('/')
+            else:
+                return "<h1>Duplicate user</h1>"
+                #need to turn this into a flash message with redirect back to /signup            
+            
+            return redirect('/newpost)
+
+        else: 
+            return render_template('signup.html', password_error = password_error, verify_error = verify_error, email_error = email_error, password='', verify='', email=email)
+
+
 
     return render_template('signup.html')
 
