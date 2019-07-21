@@ -1,5 +1,7 @@
 from flask import Flask, request, redirect, render_template, session, flash
 from flask_sqlalchemy import SQLAlchemy
+import cgi
+import os
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -114,16 +116,13 @@ def signup():
                 session['email'] = email
                 return redirect('/')
             else:
-                return "<h1>Duplicate user</h1>"
-                #need to turn this into a flash message with redirect back to /signup            
+                email_error = "Duplicate email! Please use another"
+                return render_template('signup.html', password_error = password_error, verify_error = verify_error, email_error = email_error, password='', verify='', email=email)         
             
             return redirect('/newpost)
 
         else: 
             return render_template('signup.html', password_error = password_error, verify_error = verify_error, email_error = email_error, password='', verify='', email=email)
-
-
-
     return render_template('signup.html')
 
 @app.route('/login', methods=['POST', 'GET'])
@@ -136,32 +135,32 @@ def login():
             session['email'] = email
             flash("Logged in")
             return redirect('/')
-        else:
-            return '<h1>Error!</h1>'
-            #need to turn this into a flash message and redirect back to login
-            #Use cases require it to distinguish between 'user doesn't exist' and 'password incorrect'
+        if not user:
+            flash("Invalid username")
+            return redirect('/login')
+        if user and user.password != password:
+            flash("Invalid password")
+            return redirect('/login')
     return render_template('login.html')
 
 @app.route('/logout', methods=['POST'])
 def logout():
     del session['email']
     return redirect('/blog')
-    #note this has to be a post request per rubrick, may need to add a form on the nav to make it so
+    #Rubrick requres this be a post action. Need to modify the nav to somehow have a form post with just a link.
 
 @app.route('/blog', methods=['POST', 'GET'])
 def blog():
-    #i'm just using the old blog.html template for this moment, needs updating
-    #Per functionality check, when they visit /blog it lists all blogs by all users
-    #Per functionality check, when clicking a link on any entry it takes them to that individual page
     if request.method == 'GET' and request.args.get('id') == None:
         blogs = Blog.query.all()
         return render_template('blog.html', title="Blogz!", blogs=blogs)
-    else:   
+    elif request.method == 'POST' and request.args.get('id') != None:   
         id = request.args.get('id')
         blogs = Blog.query.get(id)
         return render_template('individualblog.html', title="Blogz!", blogs=blogs)
-        #This is the 'single post page' request. Need to add one for 'single user, all posts' by getting the user_ids. 
-        #Last section of rubrick says to use query params 'user' and 'id'
+    elif request.method == 'POST' and request.args.get('user') != None:
+        owner_id = request.args.get('user')
+        blogs = Blog.query.get(owner_id)
 
 @app.route('/newpost', methods=['POST', 'GET'])
 def newpost():

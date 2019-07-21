@@ -12,8 +12,13 @@
 <body>
 
     <nav>
-        <a href='/'>View Blog</a>
-        <a href='/newpost'>Add an entry</a>
+        <ul>
+            <li><a href='/'>View Blog</a></li>
+            <li><a href='/newpost'>Add an entry</a></li>
+            <li><a href='/logout'>Logout</a></form></li>
+        </ul>
+        
+        
     </nav>
 
     {% with messages = get_flashed_messages(with_categories=True) %}
