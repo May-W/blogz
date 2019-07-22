@@ -15,8 +15,7 @@ class Blog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120))
     body = db.Column(db.Text())
-    owner_id = db.Column(db.Integer)
-    #need to link the foreign key owner_id somehow
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __init__(self, title, body):
         self.title = title
@@ -28,7 +27,6 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True)
     password = db.Column(db.String(120))
     blogs = db.Column(db.Integer)
-    #note in 'add user class' it requres we add this blogs entry, as well as in blog class.
 
     def __init__(self, email, password):
         self.email = email
@@ -72,10 +70,11 @@ def require_login():
     if request.endpoint not in allowed_routes and 'email' not in session:
         redirect('/login')
 
-@app.route('/')
+@app.route('/', methods=['POST', 'GET'])
 def index():
-    #It states in 'add navigation' that index must have a list of all usernames that go to individuial blogs when clicked
-    return render_template('index.html')
+   users =  User.query.all()
+   return render_template('index.html', users = users)
+
 
 @app.route('/signup', methods=['POST', 'GET'])
 def signup():
@@ -143,7 +142,7 @@ def login():
             return redirect('/login')
     return render_template('login.html')
 
-@app.route('/logout', methods=['POST'])
+@app.route('/logout')
 def logout():
     del session['email']
     return redirect('/blog')
@@ -161,6 +160,7 @@ def blog():
     elif request.method == 'POST' and request.args.get('user') != None:
         owner_id = request.args.get('user')
         blogs = Blog.query.get(owner_id)
+        return render_template('blog.html', title="Blogz!", blogs=blogs)
 
 @app.route('/newpost', methods=['POST', 'GET'])
 def newpost():
