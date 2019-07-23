@@ -17,16 +17,17 @@ class Blog(db.Model):
     body = db.Column(db.Text())
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    def __init__(self, title, body):
+    def __init__(self, title, body, owner_id):
         self.title = title
         self.body = body
+        self.owner_id = owner_id
 
 class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True)
     password = db.Column(db.String(120))
-    blogs = db.Column(db.Integer)
+    blogs = db.relationship('Blog', backref="owner")
 
     def __init__(self, email, password):
         self.email = email
@@ -62,8 +63,6 @@ def one_dot(string):
             dot = dot + 1
     return dot == 1
 
-
-
 @app.before_request
 def require_login():
     allowed_routes = ['login', 'signup', 'index', 'blog']
@@ -74,7 +73,6 @@ def require_login():
 def index():
    users =  User.query.all()
    return render_template('index.html', users = users)
-
 
 @app.route('/signup', methods=['POST', 'GET'])
 def signup():
@@ -118,7 +116,7 @@ def signup():
                 email_error = "Duplicate email! Please use another"
                 return render_template('signup.html', password_error = password_error, verify_error = verify_error, email_error = email_error, password='', verify='', email=email)         
             
-            return redirect('/newpost)
+            return redirect('/newpost')
 
         else: 
             return render_template('signup.html', password_error = password_error, verify_error = verify_error, email_error = email_error, password='', verify='', email=email)
@@ -145,36 +143,42 @@ def login():
 @app.route('/logout')
 def logout():
     del session['email']
+    flash('Logged out')
     return redirect('/blog')
-    #Rubrick requres this be a post action. Need to modify the nav to somehow have a form post with just a link.
 
 @app.route('/blog', methods=['POST', 'GET'])
 def blog():
     if request.method == 'GET' and request.args.get('id') == None:
         blogs = Blog.query.all()
         return render_template('blog.html', title="Blogz!", blogs=blogs)
-    elif request.method == 'POST' and request.args.get('id') != None:   
+    elif request.method == 'GET' and request.args.get('id') != None:   
         id = request.args.get('id')
         blogs = Blog.query.get(id)
         return render_template('individualblog.html', title="Blogz!", blogs=blogs)
-    elif request.method == 'POST' and request.args.get('user') != None:
+    elif request.method == 'GET' and request.args.get('user') != None:
         owner_id = request.args.get('user')
         blogs = Blog.query.get(owner_id)
         return render_template('blog.html', title="Blogz!", blogs=blogs)
+    else:
+        return "error"
+#FINAL ERROR: when it seeks a individual user, it shows all blogs from all users
 
 @app.route('/newpost', methods=['POST', 'GET'])
 def newpost():
     if request.method == 'POST':
         title_name = request.form['title']
         body_name = request.form['body']
+        owner = User.query.filter_by(email = session['email']).first()
+        owner_id = owner.id
 
         if not title_name or not body_name:
             flash('Please enter both a title and body text')
             return render_template('newpost.html', title="Add Post", title_name = title_name, body_name = body_name)
 
-        new_entry = Blog(title_name, body_name)
+        new_entry = Blog(title_name, body_name, owner_id)
         db.session.add(new_entry)
         db.session.commit()
+
         return redirect('/blog?id={}'.format(new_entry.id)) 
     
     return render_template('newpost.html', title="Add Post")
