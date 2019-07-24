@@ -156,11 +156,12 @@ def blog():
         blogs = Blog.query.get(id)
         return render_template('individualblog.html', title="Blogz!", blogs=blogs)
     elif request.method == 'GET' and request.args.get('user') != None:
-        owner_id = request.args.get('user')
-        blogs = Blog.query.get(owner_id)
+        user_email = request.args.get('user')
+        blogs = Blog.query.filter_by(owner_id = user_email).all()
         return render_template('blog.html', title="Blogz!", blogs=blogs)
     else:
-        return "error"
+        blogs = blog = Blog.query.order_by(Blog.id.desc()).all()
+        return render_template('blog.html', title="Blogz!", blogs=blogs)
 #FINAL ERROR: when it seeks a individual user, it shows all blogs from all users
 
 @app.route('/newpost', methods=['POST', 'GET'])
