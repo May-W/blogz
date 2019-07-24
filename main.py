@@ -148,21 +148,20 @@ def logout():
 
 @app.route('/blog', methods=['POST', 'GET'])
 def blog():
-    if request.method == 'GET' and request.args.get('id') == None:
+    if request.args.get('id') == None and request.args.get('user') == None:
         blogs = Blog.query.all()
         return render_template('blog.html', title="Blogz!", blogs=blogs)
-    elif request.method == 'GET' and request.args.get('id') != None:   
+    elif request.args.get('id') != None:   
         id = request.args.get('id')
         blogs = Blog.query.get(id)
         return render_template('individualblog.html', title="Blogz!", blogs=blogs)
-    elif request.method == 'GET' and request.args.get('user') != None:
-        user_email = request.args.get('user')
-        blogs = Blog.query.filter_by(owner_id = user_email).all()
-        return render_template('blog.html', title="Blogz!", blogs=blogs)
-    else:
-        blogs = blog = Blog.query.order_by(Blog.id.desc()).all()
-        return render_template('blog.html', title="Blogz!", blogs=blogs)
-#FINAL ERROR: when it seeks a individual user, it shows all blogs from all users
+    elif request.args.get('user') != None:
+        user_id = request.args.get('user')
+        blogz = Blog.query.filter_by(owner_id = user_id).all()
+        return render_template('singleuser.html', title="Blogz!", blogz=blogz)
+#    else:
+#        blogs = blog = Blog.query.order_by(Blog.id.desc()).all()
+#        return render_template('blog.html', title="Blogz!", blogs=blogs)
 
 @app.route('/newpost', methods=['POST', 'GET'])
 def newpost():
