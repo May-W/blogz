@@ -100,9 +100,8 @@ def signup():
             password_error: "Passwords must Match"
             verify_error = "Passwords must match"
 
-        if len(email) != 0:
-            if length_valid(email) == False or contains_spaces(email) == True or one_at(email) == False or one_dot(email) == False:
-                email_error = "Email must be between 3 and 20 characters, must not contain spaces, and may only contain one at and one dot"
+        if length_valid(email) == False or contains_spaces(email) == True or one_at(email) == False or one_dot(email) == False:
+            email_error = "Email must be between 3 and 20 characters, must not contain spaces, and may only contain one at and one dot"
 
         if not password_error and not verify_error and not email_error:
             existing_user = User.query.filter_by(email=email).first()
@@ -159,9 +158,6 @@ def blog():
         user_id = request.args.get('user')
         blogz = Blog.query.filter_by(owner_id = user_id).all()
         return render_template('singleuser.html', title="Blogz!", blogz=blogz)
-#    else:
-#        blogs = blog = Blog.query.order_by(Blog.id.desc()).all()
-#        return render_template('blog.html', title="Blogz!", blogs=blogs)
 
 @app.route('/newpost', methods=['POST', 'GET'])
 def newpost():
